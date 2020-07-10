@@ -1,4 +1,4 @@
-package dev.appsody.starter.health;
+package dev.appsody.application.health;
 
 import javax.enterprise.context.ApplicationScoped;
 
