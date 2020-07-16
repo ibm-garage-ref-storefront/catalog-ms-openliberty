@@ -1,10 +1,25 @@
 <server description="Liberty server">
     <featureManager>
         <feature>microProfile-3.2</feature>
+        <feature>ejbLite-3.2</feature>
+        <!-- <feature>usr:opentracingZipkin-0.31</feature> -->
     </featureManager>
 
     <httpEndpoint host="*" httpPort="${default.http.port}" 
         httpsPort="${default.https.port}" id="defaultHttpEndpoint"/>
     
-    <webApplication location="catalog-ms-openliberty.war" contextRoot="/micro"/>
+
+    <!-- Disable metrics authentication to use with prometheus --> 
+    <mpMetrics authentication="false"/>
+
+    <!-- Automatically expand WAR files and EAR files -->
+    <applicationManager autoExpand="true"/>
+    <quickStartSecurity userName="admin" userPassword="password"/>
+
+    <!-- <opentracingZipkin host="${env.zipkinHost}" port="${env.zipkinPort}"/> -->
+
+    <webApplication name="catalog-application" location="catalog-ms-openliberty.war" contextRoot="/micro">
+    <!-- enable visibility to third party apis -->
+    	<classloader apiTypeVisibility="api,ibm-api,spec,stable,third-party"/>
+  	</webApplication>
 </server>
