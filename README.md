@@ -109,11 +109,11 @@ docker run --name inventory \
     -e jdbcURL=jdbc:mysql://<docker_host>:3306/inventorydb?useSSL=true \
     -e dbuser=dbuser \
     -e dbpassword=password \
-    -p 9091:9080 \
+    -p 9081:9080 \
     -d dev.local/inventory-ms-openliberty
 ```
 
-For instance, if it is `docker-for-mac` it will be `docker.for.mac.localhost`.
+For instance <docker_host>, if it is `docker-for-mac` it will be `docker.for.mac.localhost`.
 
 * You can also verify it as follows.
 
@@ -152,7 +152,28 @@ CONTAINER ID        IMAGE                                                 COMMAN
 2cd0209be1f4        docker.elastic.co/elasticsearch/elasticsearch:6.3.2   "/usr/local/bin/dock…"   7 seconds ago        Up 6 seconds        0.0.0.0:9200->9200/tcp, 0.0.0.0:9300->9300/tcp   catalogelasticsearch
 ```
 
+3. Set up Jaegar for opentracing. This is optional. If you want to enable distributed tracing your application, run this step.
+
+```
+ docker run -d --name jaeger   -e COLLECTOR_ZIPKIN_HTTP_PORT=9411   -p 5775:5775/udp   -p 6831:6831/udp   -p 6832:6832/udp   -p 5778:5778   -p 16686:16686   -p 14268:14268   -p 9411:9411   jaegertracing/all-in-one:1.11
+```
+
+You should have the following output:
+```bash
+$ docker ps
+CONTAINER ID        IMAGE                                                 COMMAND                  CREATED             STATUS              PORTS                                                                                                                                                                     NAMES
+d0600b983133        jaegertracing/all-in-one:1.11                         "/go/bin/all-in-one-…"   2 hours ago         Up 2 hours          0.0.0.0:5775->5775/udp, 0.0.0.0:5778->5778/tcp, 0.0.0.0:9411->9411/tcp, 0.0.0.0:14268->14268/tcp, 0.0.0.0:6831-6832->6831-6832/udp, 0.0.0.0:16686->16686/tcp, 14250/tcp   jaeger
+```
+
 3. Run the application
+
+```
+appsody run --docker-options "-e elasticsearch_url=http://<docker_host>:9200 -e elasticsearch_index=micro -e elasticsearch_doc_type=items -e dev.appsody.application.client.InventoryServiceClient/mp-rest/url=http://<docker_host>:9081/micro/inventory -e inventory_health=http://<docker_host>:9081/health -e JAEGER_SERVICE_NAME=catalog-ms-openliberty -e JAEGER_AGENT_HOST=<docker_host> -e JAEGER_AGENT_PORT=6831 -e JAEGER_REPORTER_LOG_SPANS=true -e JAEGER_REPORTER_FLUSH_INTERVAL=2000 -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1"
+```
+
+For instance `<docker_host>`, if it is `docker-for-mac` it will be `docker.for.mac.localhost`.
+
+If not running Jaegar, run the below command.
 
 ```
 appsody run --docker-options "-e elasticsearch_url=http://<docker_host>:9200 -e elasticsearch_index=micro -e elasticsearch_doc_type=items -e dev.appsody.application.client.InventoryServiceClient/mp-rest/url=http://<docker_host>:9081/micro/inventory -e inventory_health=http://<docker_host>:9081/health"
@@ -164,7 +185,7 @@ If this runs successfully, you will be able to see the below messages.
 
 ```
 [Container] [INFO] [AUDIT   ] CWWKT0016I: Web application available (default_host): http://3abf214e654a:9080/micro/
-[Container] [INFO] [AUDIT   ] CWWKZ0003I: The application catalog-application updated in 6.546 seconds.
+[Container] [INFO] [AUDIT   ] CWWKZ0003I: The application catalog-ms-openliberty updated in 6.546 seconds.
 [Container] [INFO] rows loaded
 [Container] [INFO] Running it.dev.appsody.application.EndpointTest
 [Container] [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.417 s - in it.dev.appsody.application.EndpointTest
@@ -189,4 +210,11 @@ If this runs successfully, you will be able to see the below messages.
 
 Visit http://localhost:9080/openapi/ui/ and test the rest end point `/items`
 as shown below:
-![](./images/openapi-ui.png)
+
+![Openapi UI](./images/openapi-ui.png)
+
+If enabled Jaegar, access it at http://localhost:16686/ and point the service to `catalog-ms-openliberty` to access the traces.
+
+![Jaegar UI](./images/jaegar_ui_catalog.png)
+
+![Jaegar traces](./images/jaegar_traces.png)
