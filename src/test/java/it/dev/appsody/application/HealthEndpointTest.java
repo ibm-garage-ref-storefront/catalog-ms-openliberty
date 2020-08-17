@@ -1,4 +1,4 @@
-package it.dev.appsody.starter;
+package it.dev.appsody.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
