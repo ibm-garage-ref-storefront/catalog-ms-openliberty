@@ -64,9 +64,7 @@ public class ItemService {
     public List<Item> findAll() {
         List<Item> list;
         final String req_url = url + "/" + index + "/" + doc_type + "/_search?size=1000&pretty=true";
-        System.out.println("url "+url);
         final Response response = perform_request(req_url);
-        System.out.println("response "+response.toString());
 
         try {
             list = getItemsFromResponse(response);
